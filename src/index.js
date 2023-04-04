@@ -18,19 +18,28 @@ const guard = document.querySelector('.js-guard');
 
 searchForm.addEventListener('submit', onSearch);
 
+let total = 40;
 function onLoad(entries, observer) {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
       // fetchingCard(query, page);
       pixabayApi(query, page).then(data => {
+        let hits = data.hits.length;
+        total += hits;
         Loading.standard();
         createMarkup(data);
         observer.observe(guard);
-        if (data.hits.length < 40) {
+        // if (data.hits.length < 40) {
+        //   observer.unobserve(guard);
+        // }
+        if (total >= data.totalHits || data.hits.length < 40) {
           observer.unobserve(guard);
+          total = 40;
         }
         Loading.remove(1000);
+        lightbox.refresh();
+        console.log(total, hits);
       });
     }
   });
@@ -66,13 +75,11 @@ function fetchingCard(request = 'cat', page = 1) {
         Notify.success(`Hooray! We found ${totalHits} images.`);
       }
       createMarkup(data);
-      new SimpleLightbox('.gallery a', {
-        captionsData: 'alt',
-        captionDelay: 300,
-        nav: false,
-        showCounter: false,
-      });
-      observer.observe(guard);
+      lightbox.refresh();
+      if (data.totalHits > 40) {
+        observer.observe(guard);
+      }
+
       // if (data.hits.length < 40) {
       //   observer.unobserve(guard);
       // }
@@ -81,6 +88,13 @@ function fetchingCard(request = 'cat', page = 1) {
     })
     .catch(error => Notify.failure(error.message));
 }
+
+let lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 300,
+  nav: false,
+  showCounter: false,
+});
 
 // function fetchingCard(request = 'cat', page = 1) {
 //   pixabayApi(request, page)
