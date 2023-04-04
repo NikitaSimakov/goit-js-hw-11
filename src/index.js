@@ -7,6 +7,7 @@ import { pixabayApi } from './pixabayApi';
 const gallery = document.querySelector('.gallery');
 const searchForm = document.querySelector('.search-form');
 let page = 1;
+let total = 40;
 let query = '';
 const options = {
   root: null,
@@ -18,28 +19,22 @@ const guard = document.querySelector('.js-guard');
 
 searchForm.addEventListener('submit', onSearch);
 
-let total = 40;
 function onLoad(entries, observer) {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
-      // fetchingCard(query, page);
       pixabayApi(query, page).then(data => {
         let hits = data.hits.length;
         total += hits;
         Loading.standard();
         createMarkup(data);
         observer.observe(guard);
-        // if (data.hits.length < 40) {
-        //   observer.unobserve(guard);
-        // }
         if (total >= data.totalHits || data.hits.length < 40) {
           observer.unobserve(guard);
           total = 40;
         }
         Loading.remove(1000);
         lightbox.refresh();
-        console.log(total, hits);
       });
     }
   });
@@ -79,10 +74,6 @@ function fetchingCard(request = 'cat', page = 1) {
       if (data.totalHits > 40) {
         observer.observe(guard);
       }
-
-      // if (data.hits.length < 40) {
-      //   observer.unobserve(guard);
-      // }
       smoothScroll();
       Loading.remove(1000);
     })
@@ -95,37 +86,6 @@ let lightbox = new SimpleLightbox('.gallery a', {
   nav: false,
   showCounter: false,
 });
-
-// function fetchingCard(request = 'cat', page = 1) {
-//   pixabayApi(request, page)
-//     .then(data => {
-//       Loading.standard({ clickToClose: true, svgSize: '49px' });
-//       if (!data.totalHits) {
-//         Notify.warning(
-//           'Sorry, there are no images matching your search query. Please try again.'
-//         );
-//         Loading.remove();
-//         return;
-//       }
-//       if (data.totalHits) {
-//         Notify.success(`Hooray! We found ${data.totalHits} images.`);
-//       }
-//       createMarkup(data);
-//       new SimpleLightbox('.gallery a', {
-//         captionsData: 'alt',
-//         captionDelay: 300,
-//         nav: false,
-//         showCounter: false,
-//       });
-//       observer.observe(guard);
-//       // if (data.hits.length < 40) {
-//       //   observer.unobserve(guard);
-//       // }
-//       smoothScroll();
-//       Loading.remove(1000);
-//     })
-//     .catch(error => Notify.failure(error.message));
-// }
 
 function createMarkup(data) {
   const markup = data.hits
